@@ -6,9 +6,8 @@ import updateCardSchema from "../Schema/cardsSchemas.js";
 
 
 const cardsRouter = Router()
-cardsRouter.post("/cards",ValidateCompanyApiKey, cardsControllers.createCard)
+cardsRouter.post("/cards", cardsControllers.createCard)
 cardsRouter.post("/cards/ativate", 
-  ValidateCompanyApiKey,
   validateSchema(updateCardSchema),
   cardsControllers.ativateCard)
 
