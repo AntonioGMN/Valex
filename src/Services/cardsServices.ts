@@ -3,7 +3,7 @@ import * as cardsRepository from "../Repositories/cardRepository.js"
 import {TransactionTypes} from "../Repositories/cardRepository.js"
 import { faker } from '@faker-js/faker';
 import bcrypt from "bcrypt";
-import moment  from "moment"
+import moment  from "moment";
 moment.locale('pt-br');
 
 
@@ -78,5 +78,5 @@ function throwErro(type: string, message: string){
 
 function validateCVC(cvc: string, hashCVC: string){
   if(!bcrypt.compareSync(cvc, hashCVC)) throwErro('Forbidden', 'Forbidden CVC for this card')
-  else return true;
+  return
 }
