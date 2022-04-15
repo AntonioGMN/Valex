@@ -6,7 +6,7 @@ export default async function ValidateCompanyApiKey(req: Request, res: Response,
   
   const company = await findByApiKey(apiKey);
   if(!company) throw {
-    type: "error_not_found",
+    type: "Not Found",
 		message: `Could not find specified company!`
   }
 
