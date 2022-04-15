@@ -1,24 +1,24 @@
 import * as employeesRepository from "../Repositories/employeeRepository.js"
 import * as cardsRepository from "../Repositories/cardRepository.js"
-import {GenCC} from "creditcard-generator"
-import generator from "br-document-generator"
+import {TransactionTypes} from "../Repositories/cardRepository.js"
+import { faker } from '@faker-js/faker';
 import bcrypt from "bcrypt";
 import moment  from "moment"
-import {TransactionTypes} from "../Repositories/cardRepository.js"
 moment.locale('pt-br');
+
 
 export async function createCard(employeeId: number, type: TransactionTypes){
   const validateCard = await cardsRepository.findByTypeAndEmployeeId(type, employeeId)
+  
   if(validateCard) throw {
     type: "Conflict",
 		message: `This employee already have this card type!`
   }
-
-  const creditCard = await generator.creditCard("master");
+ 
   const cardholderName = await handlerCardName(employeeId);
-  const number = GenCC("Mastercard");
+  const number = faker.finance.creditCardNumber('mastercard')
   const expirationDate = moment().add(5, "year").format("MM/YY");
-  const securityCode = await bcrypt.hashSync(creditCard.cvv, 8);
+  const securityCode = await hashSecurityCode();
 
   const cardData = {
     employeeId,
@@ -38,6 +38,12 @@ export async function createCard(employeeId: number, type: TransactionTypes){
   return cardData;
 }
 
+function hashSecurityCode() {
+  const cvc = faker.finance.creditCardCVV();
+  console.log(cvc)
+  return bcrypt.hashSync(cvc,8);
+}
+
 async function handlerCardName(employeeId: number){
   const {fullName} = await employeesRepository.findById(employeeId);
   if(fullName.split(" ").length < 2) return fullName;
@@ -51,3 +57,26 @@ async function handlerCardName(employeeId: number){
   return response.join(" ");
 }
 
+export async function ativateCard(number: string, cardholderName: string, expirationDate: string, cvc: string, password: string) {
+  const cardData = await cardsRepository.findByCardDetails(number,cardholderName,expirationDate)
+  
+  if(!cardData) throwErro("Not Found", 'Card not found!')
+  if(cardData.password)  throwErro("Conflict", 'This card is already active!')
+  validateCVC(cvc, cardData.securityCode);
+
+  const hashPassword = bcrypt.hashSync(password,8);
+  const updateCard = {...cardData, password: hashPassword}
+ 
+  await cardsRepository.update(cardData.id, updateCard)
+
+  return cardData;
+}
+
+function throwErro(type: string, message: string){
+  throw {type, message}
+}
+
+function validateCVC(cvc: string, hashCVC: string){
+  if(!bcrypt.compareSync(cvc, hashCVC)) throwErro('Forbidden', 'Forbidden CVC for this card')
+  else return true;
+}
