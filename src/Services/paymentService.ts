@@ -17,8 +17,7 @@ export async function payment(number: string, cardholderName:
   validateTypes(cardType, businessType)
 
   const cardRecharges = await rechargeRepository.findByCardId(cardId)
-  const cardRechargesAmount  = rechargesAmount(cardRecharges)
-  console.log(cardRechargesAmount)
+  const cardRechargesAmount  = utils.amount(cardRecharges)
 
   if(cardRechargesAmount > amount){
     const paymentData = {
@@ -33,11 +32,4 @@ export async function payment(number: string, cardholderName:
 function validateTypes(cardType: string, businessType: string){
   if(cardType != businessType) utils.throwErro('Conflict', 'Conflit on card type and bussiness type')
   return
-}
-
-function rechargesAmount(array){
-  const initialValue = 0;
-   
-  return array.map(a=>a.amount).reduce((previousValue, currentValue) => previousValue + currentValue,
-  initialValue)
 }

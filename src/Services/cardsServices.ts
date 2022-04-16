@@ -1,5 +1,9 @@
 import * as employeesRepository from "../Repositories/employeeRepository.js"
 import * as cardsRepository from "../Repositories/cardRepository.js"
+import * as utils from "../utils/index.js"
+import * as rechargeRepository from "../Repositories/rechargeRepository.js"
+import * as paymentRepository from "../Repositories/paymentRepository.js"
+
 import {TransactionTypes} from "../Repositories/cardRepository.js"
 import { faker } from '@faker-js/faker';
 import bcrypt from "bcrypt";
@@ -38,6 +42,8 @@ export async function createCard(employeeId: number, type: TransactionTypes){
   return cardData;
 }
 
+
+
 function hashSecurityCode() {
   const cvc = faker.finance.creditCardCVV();
   console.log(cvc)
@@ -70,6 +76,25 @@ export async function ativateCard(number: string, cardholderName: string, expira
   await cardsRepository.update(cardData.id, updateCard)
 
   return cardData;
+}
+
+export async function cardBalance(number: string, cardholderName: string, expirationDate: string, cvc: string,){
+  const { id } = await utils.getCardDataEndValide(number,cardholderName, expirationDate, cvc);
+  
+  const recharges = await rechargeRepository.findByCardId(id);
+  const payments = await paymentRepository.findByCardId(id);
+
+  const rechargesAmount = utils.amount(recharges);
+  const paymentsAmount = utils.amount(payments);
+  const balance = rechargesAmount - paymentsAmount;
+
+  const cardBalance = {
+    balance,
+    transactions: payments,
+    recharges
+  }
+
+  return cardBalance;
 }
 
 function throwErro(type: string, message: string){

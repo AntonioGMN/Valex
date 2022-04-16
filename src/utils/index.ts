@@ -16,6 +16,7 @@ export async function getCardDataEndValide(number: string, cardholderName: strin
   
   if(!cardData) throwErro("Not Found", 'Card not found!')
   
+  await validateExpirationDate(expirationDate)
   await validateHash(cvc, cardData.securityCode)
 
   return cardData;
@@ -25,5 +26,12 @@ export function validateExpirationDate(date){
   const now = moment().format('MM/YY')
   if(now > date) throwErro('Forbidden', 'This card has expireted')
   return
+}
+
+export function amount(array){
+  const initialValue = 0;
+   
+  return array.map(a=>a.amount).reduce((previousValue, currentValue) => previousValue + currentValue,
+  initialValue)
 }
 
